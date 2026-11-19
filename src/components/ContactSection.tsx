@@ -39,28 +39,94 @@ export function ContactSection({ contact }: ContactSectionProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          subject: subject.trim(),
-          message: message.trim(),
-        }),
-      });
-      const payload = (await res.json()) as { ok?: boolean; error?: string; message?: string };
-      if (!res.ok) {
+      let apiSaved = false;
+      let emailDispatched = false;
+
+      // 1. Try Express backend API when running full-stack
+      try {
+        const apiRes = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            subject: subject.trim(),
+            message: message.trim(),
+          }),
+        });
+        const contentType = apiRes.headers.get('content-type') || '';
+        if (apiRes.ok && contentType.includes('application/json')) {
+          const payload = (await apiRes.json()) as {
+            ok?: boolean;
+            emailSent?: boolean;
+          };
+          apiSaved = Boolean(payload.ok);
+          emailDispatched = Boolean(payload.emailSent);
+        }
+      } catch {
+        // Static hosting (e.g. Netlify) does not expose /api/contact
+      }
+
+      // 2. Direct email delivery to contact.email via FormSubmit when static or server email not yet dispatched
+      if (!emailDispatched) {
+        const fsRes = await fetch(
+          `https://formsubmit.co/ajax/${encodeURIComponent(contact.email)}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              name: name.trim(),
+              email: email.trim(),
+              _replyto: email.trim(),
+              _subject: `Portfolio Contact: ${subject.trim()}`,
+              subject: subject.trim(),
+              message: message.trim(),
+              _template: 'table',
+              _captcha: 'false',
+            }),
+          }
+        );
+
+        if (fsRes.ok) {
+          const fsPayload = (await fsRes.json()) as { success?: string | boolean };
+          if (fsPayload.success === 'true' || fsPayload.success === true) {
+            emailDispatched = true;
+          }
+        }
+      }
+
+      // 3. Also submit to Netlify Forms if hosted on Netlify
+      if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+        try {
+          const body = new URLSearchParams({
+            'form-name': 'contact',
+            name: name.trim(),
+            email: email.trim(),
+            subject: subject.trim(),
+            message: message.trim(),
+          }).toString();
+          await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body,
+          });
+        } catch {
+          // Ignore backup Netlify form failure
+        }
+      }
+
+      if (!emailDispatched && !apiSaved) {
         setStatus({
           type: 'error',
-          text: payload.error || 'Unable to send your message right now.',
+          text: `Unable to submit right now. Please email directly at ${contact.email}.`,
         });
       } else {
         setStatus({
           type: 'success',
-          text:
-            payload.message ||
-            'Thank you for reaching out. Your message has been sent successfully.',
+          text: 'Thank you for reaching out. Your message has been sent to Ankur Mishra.',
         });
         setName('');
         setEmail('');
@@ -70,7 +136,7 @@ export function ContactSection({ contact }: ContactSectionProps) {
     } catch {
       setStatus({
         type: 'error',
-        text: 'Network error while sending message. Please email directly.',
+        text: `Unable to send message right now. Please email directly at ${contact.email}.`,
       });
     } finally {
       setSubmitting(false);
@@ -78,6 +144,9 @@ export function ContactSection({ contact }: ContactSectionProps) {
   };
 
   const telHref = `tel:${contact.phone.replace(/\s+/g, '')}`;
+  const previewHref = contact.resumeFileUrl.startsWith('/api/')
+    ? `${contact.resumeFileUrl}?preview=1`
+    : contact.resumeFileUrl;
 
   return (
     <section id="contact" className="py-16 sm:py-24">
@@ -177,7 +246,7 @@ export function ContactSection({ contact }: ContactSectionProps) {
                   <span>Download My CV</span>
                 </a>
                 <a
-                  href={`${contact.resumeFileUrl}?preview=1`}
+                  href={previewHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#232A38] text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 transition-colors whitespace-nowrap shrink-0"
@@ -191,10 +260,15 @@ export function ContactSection({ contact }: ContactSectionProps) {
           {/* Contact Form */}
           <div className="lg:col-span-7">
             <form
+              name="contact"
+              method="POST"
+              data-netlify="true"
+              netlify-honeypot="bot-field"
               onSubmit={handleSubmit}
               noValidate
               className="p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-[#1B212D] bg-white dark:bg-[#0B0E14] space-y-5"
             >
+              <input type="hidden" name="form-name" value="contact" />
               <div>
                 <h3 className="font-display text-xl font-semibold text-slate-950 dark:text-white">
                   Send a Message

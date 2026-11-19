@@ -15,6 +15,7 @@ const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.resolve(__dirname, 'data');
 const UPLOADS_DIR = path.resolve(DATA_DIR, 'uploads');
+const PUBLIC_DIR = path.resolve(__dirname, 'public');
 const PORTFOLIO_FILE = path.resolve(DATA_DIR, 'portfolio.json');
 const MESSAGES_FILE = path.resolve(DATA_DIR, 'messages.json');
 const AUTH_FILE = path.resolve(DATA_DIR, 'auth.json');
@@ -43,10 +44,17 @@ function ensureDirectoriesAndSeeds(): void {
     fs.writeFileSync(MESSAGES_FILE, JSON.stringify([], null, 2), 'utf8');
   }
 
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+
   const defaultResumePath = path.resolve(UPLOADS_DIR, DEFAULT_RESUME_FILENAME);
   if (!fs.existsSync(defaultResumePath)) {
     const pdfBuf = buildResumePdfBuffer(DEFAULT_PORTFOLIO);
     fs.writeFileSync(defaultResumePath, pdfBuf);
+  }
+
+  const publicResumePath = path.resolve(PUBLIC_DIR, 'Ankur_Mishra_Resume.pdf');
+  if (!fs.existsSync(publicResumePath)) {
+    fs.copyFileSync(defaultResumePath, publicResumePath);
   }
 
   if (!fs.existsSync(AUTH_FILE)) {
@@ -137,8 +145,13 @@ function parseCookies(cookieHeader: string | undefined): Record<string, string> 
 }
 
 function isAuthenticatedRequest(req: express.Request): boolean {
+  const authHeader = req.headers.authorization;
+  const bearerToken =
+    typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7).trim()
+      : '';
   const cookies = parseCookies(req.headers.cookie);
-  const token = cookies[SESSION_COOKIE];
+  const token = bearerToken || cookies[SESSION_COOKIE];
   if (!token) return false;
   const parts = token.split('.');
   if (parts.length !== 2) return false;
@@ -227,8 +240,8 @@ async function startServer(): Promise<void> {
     res.sendFile(filePath);
   });
 
-  // Public Contact Form Submission
-  app.post('/api/contact', (req, res) => {
+  // Public Contact Form Submission + Email Notification
+  app.post('/api/contact', async (req, res) => {
     const { name, email, subject, message } = req.body as Partial<ContactMessage>;
     if (
       !name?.trim() ||
@@ -255,10 +268,75 @@ async function startServer(): Promise<void> {
     messages.unshift(newEntry);
     writeMessages(messages);
 
+    const portfolio = readPortfolio();
+    const recipientEmail = portfolio.contact.email || 'ankurmishrastudent@gmail.com';
+    let emailSent = false;
+
+    // 1. Optional Resend API if configured in environment
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM_EMAIL || 'Portfolio Contact <onboarding@resend.dev>',
+            to: [recipientEmail],
+            reply_to: newEntry.email,
+            subject: `Portfolio Contact: ${newEntry.subject}`,
+            text: `Name: ${newEntry.name}\nEmail: ${newEntry.email}\nSubject: ${newEntry.subject}\n\nMessage:\n${newEntry.message}`,
+          }),
+        });
+        if (resendRes.ok) emailSent = true;
+      } catch {
+        // Fallback below
+      }
+    }
+
+    // 2. Zero-config FormSubmit email forwarding
+    if (!emailSent) {
+      try {
+        const originUrl =
+          req.headers.origin || process.env.APP_URL || 'https://ankur-mishra-19.netlify.app/';
+        const fsRes = await fetch(
+          `https://formsubmit.co/ajax/${encodeURIComponent(recipientEmail)}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              Referer: String(originUrl),
+            },
+            body: JSON.stringify({
+              name: newEntry.name,
+              email: newEntry.email,
+              _replyto: newEntry.email,
+              _subject: `Portfolio Contact: ${newEntry.subject}`,
+              subject: newEntry.subject,
+              message: newEntry.message,
+              _template: 'table',
+              _captcha: 'false',
+            }),
+          }
+        );
+        if (fsRes.ok) {
+          const fsData = (await fsRes.json()) as { success?: string | boolean };
+          if (fsData.success === 'true' || fsData.success === true) {
+            emailSent = true;
+          }
+        }
+      } catch {
+        // Message is still safely saved in Admin Inbox
+      }
+    }
+
     res.status(201).json({
       ok: true,
       id: newEntry.id,
-      message: 'Thank you for reaching out. Your message has been delivered to Ankur Mishra.',
+      emailSent,
+      message: 'Thank you for reaching out. Your message has been sent to Ankur Mishra.',
     });
   });
 
@@ -275,13 +353,16 @@ async function startServer(): Promise<void> {
     }
 
     const token = createSessionToken();
+    const isHttps =
+      req.secure || req.headers['x-forwarded-proto'] === 'https';
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: isHttps ? 'none' : 'lax',
+      secure: isHttps,
       path: '/',
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
-    res.json({ authenticated: true });
+    res.json({ authenticated: true, token });
   });
 
   app.post('/api/admin/logout', (_req, res) => {
@@ -363,6 +444,8 @@ async function startServer(): Promise<void> {
     fs.writeFileSync(targetPath, buffer);
 
     if (kind === 'resume') {
+      const publicResumePath = path.resolve(PUBLIC_DIR, 'Ankur_Mishra_Resume.pdf');
+      fs.writeFileSync(publicResumePath, buffer);
       const current = readPortfolio();
       current.contact.resumeOriginalName = storedName;
       current.contact.resumeUpdatedAt = new Date().toISOString().slice(0, 10);

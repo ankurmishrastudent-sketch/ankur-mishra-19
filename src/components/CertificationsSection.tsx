@@ -1,15 +1,13 @@
-import { Download, ExternalLink, FileText, Lock, X } from 'lucide-react';
+import { Download, ExternalLink, FileText, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { CertificationItem } from '../types/portfolio.ts';
 
 interface CertificationsSectionProps {
   certifications: CertificationItem[];
-  onOpenAdmin: () => void;
 }
 
 export function CertificationsSection({
   certifications,
-  onOpenAdmin,
 }: CertificationsSectionProps) {
   const [selectedCert, setSelectedCert] = useState<CertificationItem | null>(null);
 
@@ -192,22 +190,11 @@ export function CertificationsSection({
                 <div className="py-10 px-6 text-center rounded-xl border border-dashed border-slate-300 dark:border-[#242C3D] bg-slate-50 dark:bg-[#080B10]">
                   <FileText className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
                   <h4 className="font-display text-base font-semibold text-slate-900 dark:text-white mb-2">
-                    Certificate File Not Uploaded Yet
+                    Verified Credential Details
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
-                    Once you upload the PDF or image copy for <strong className="font-medium text-slate-800 dark:text-slate-200">{selectedCert.title}</strong> ({selectedCert.issuer}), visitors can preview and download it directly here.
+                  <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                    Completed <strong className="font-medium text-slate-800 dark:text-slate-200">{selectedCert.title}</strong> issued by {selectedCert.issuer} ({selectedCert.date}). Digital certificate copy is available upon direct request.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedCert(null);
-                      onOpenAdmin();
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-950 text-white dark:bg-teal-500 dark:text-[#041014] cursor-pointer"
-                  >
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Upload via Admin Dashboard</span>
-                  </button>
                 </div>
               )}
             </div>

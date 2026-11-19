@@ -1,4 +1,4 @@
-import { ArrowRight, Download, Lock, Moon, Sun } from 'lucide-react';
+import { ArrowRight, Download, Moon, Sun } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { ContactInfo, ProfileInfo } from '../types/portfolio.ts';
@@ -10,7 +10,6 @@ interface HeroSectionProps {
   certificationCount: number;
   isDark: boolean;
   onToggleTheme: () => void;
-  onOpenAdmin: () => void;
 }
 
 function getGreeting(hour: number): string {
@@ -26,7 +25,6 @@ export function HeroSection({
   certificationCount,
   isDark,
   onToggleTheme,
-  onOpenAdmin,
 }: HeroSectionProps) {
   const [now, setNow] = useState<Date>(() => new Date());
 
@@ -102,15 +100,6 @@ export function HeroSection({
                   <span>Dark Mode</span>
                 </>
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={onOpenAdmin}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#1F2633] bg-white dark:bg-[#0D1017] text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600 transition-colors whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-            >
-              <Lock className="w-3 h-3" aria-hidden="true" />
-              <span>Admin</span>
             </button>
           </div>
         </div>

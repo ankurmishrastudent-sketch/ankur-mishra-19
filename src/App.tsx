@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AboutSection } from './components/AboutSection.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { CertificationsSection } from './components/CertificationsSection.tsx';
@@ -23,7 +23,7 @@ export default function App() {
     }
   });
   const [showAdmin, setShowAdmin] = useState<boolean>(() => {
-    return window.location.hash === '#admin';
+    return window.location.pathname === '/admin' || window.location.hash === '#admin';
   });
 
   useEffect(() => {
@@ -43,37 +43,93 @@ export default function App() {
   useEffect(() => {
     let active = true;
     fetch('/api/portfolio')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: PortfolioData | null) => {
-        if (active && data && data.profile) {
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) {
+          return null;
+        }
+        return (await res.json()) as PortfolioData;
+      })
+      .then((data) => {
+        if (!active) return;
+        if (data && data.profile) {
           setPortfolio(data);
+        } else {
+          setPortfolio((prev) => ({
+            ...prev,
+            contact: {
+              ...prev.contact,
+              resumeFileUrl: '/Ankur_Mishra_Resume.pdf',
+            },
+          }));
         }
       })
       .catch(() => {
-        // Keep default portfolio fallback if offline
+        if (!active) return;
+        setPortfolio((prev) => ({
+          ...prev,
+          contact: {
+            ...prev.contact,
+            resumeFileUrl: '/Ankur_Mishra_Resume.pdf',
+          },
+        }));
       });
     return () => {
       active = false;
     };
   }, []);
 
+  const footerTapRef = useRef<{ count: number; lastAt: number }>({ count: 0, lastAt: 0 });
+
   useEffect(() => {
-    const onHashChange = () => {
-      setShowAdmin(window.location.hash === '#admin');
+    const syncAdminFromUrl = () => {
+      setShowAdmin(
+        window.location.pathname === '/admin' || window.location.hash === '#admin'
+      );
     };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (
+        (e.altKey && e.shiftKey && key === 'a') ||
+        ((e.ctrlKey || e.metaKey) && e.altKey && key === 'a')
+      ) {
+        e.preventDefault();
+        window.location.hash = 'admin';
+        setShowAdmin(true);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    };
+
+    window.addEventListener('hashchange', syncAdminFromUrl);
+    window.addEventListener('popstate', syncAdminFromUrl);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('hashchange', syncAdminFromUrl);
+      window.removeEventListener('popstate', syncAdminFromUrl);
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, []);
 
-  const openAdmin = () => {
-    window.location.hash = 'admin';
-    setShowAdmin(true);
-    window.scrollTo({ top: 0, behavior: 'auto' });
+  const handleSecretCopyrightTap = () => {
+    const now = Date.now();
+    if (now - footerTapRef.current.lastAt > 1200) {
+      footerTapRef.current = { count: 1, lastAt: now };
+      return;
+    }
+    footerTapRef.current.count += 1;
+    footerTapRef.current.lastAt = now;
+    if (footerTapRef.current.count >= 3) {
+      footerTapRef.current = { count: 0, lastAt: 0 };
+      window.location.hash = 'admin';
+      setShowAdmin(true);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
   };
 
   const closeAdmin = () => {
-    if (window.location.hash === '#admin') {
-      history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
+      history.replaceState(null, '', '/');
     }
     setShowAdmin(false);
   };
@@ -104,16 +160,12 @@ export default function App() {
           certificationCount={portfolio.certifications.length}
           isDark={isDark}
           onToggleTheme={() => setIsDark((prev) => !prev)}
-          onOpenAdmin={openAdmin}
         />
 
         <AboutSection about={portfolio.about} />
         <EducationSection education={portfolio.education} />
         <CompetitionsSection competitions={portfolio.competitions} />
-        <CertificationsSection
-          certifications={portfolio.certifications}
-          onOpenAdmin={openAdmin}
-        />
+        <CertificationsSection certifications={portfolio.certifications} />
         <SkillsLeadershipSection
           skills={portfolio.skills}
           leadership={portfolio.leadership}
@@ -123,7 +175,10 @@ export default function App() {
 
       <footer className="border-t border-slate-200/80 dark:border-[#181D27] py-8">
         <div className="max-w-[1200px] mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600 dark:text-slate-400">
-          <p>
+          <p
+            onClick={handleSecretCopyrightTap}
+            className="select-none"
+          >
             © {new Date().getFullYear()} {portfolio.profile.fullName} · {portfolio.profile.institution}
           </p>
           <div className="flex items-center gap-5">
@@ -141,13 +196,12 @@ export default function App() {
             >
               Email
             </a>
-            <button
-              type="button"
-              onClick={openAdmin}
-              className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
+            <a
+              href={`tel:${portfolio.contact.phone.replace(/\s+/g, '')}`}
+              className="hover:text-slate-950 dark:hover:text-white transition-colors"
             >
-              Admin Dashboard
-            </button>
+              Phone
+            </a>
           </div>
         </div>
       </footer>

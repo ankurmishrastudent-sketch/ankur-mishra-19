@@ -1,8 +1,6 @@
 import {
   ArrowLeft,
   CheckCircle2,
-  Eye,
-  EyeOff,
   FileText,
   Inbox,
   KeyRound,
@@ -53,7 +51,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
 export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboardProps) {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [passwordInput, setPasswordInput] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
 
@@ -74,9 +71,20 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
     setDraft(structuredClone(portfolio));
   }, [portfolio]);
 
+  const getAuthHeaders = (extra?: Record<string, string>): Record<string, string> => {
+    const headers: Record<string, string> = { ...(extra || {}) };
+    try {
+      const token = sessionStorage.getItem('am_admin_token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // Ignore storage failures
+    }
+    return headers;
+  };
+
   useEffect(() => {
     let active = true;
-    fetch('/api/admin/session')
+    fetch('/api/admin/session', { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data: { authenticated?: boolean }) => {
         if (active) setAuthenticated(Boolean(data.authenticated));
@@ -92,7 +100,7 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
   useEffect(() => {
     if (!authenticated || activeTab !== 'inbox') return;
     setLoadingMessages(true);
-    fetch('/api/admin/messages')
+    fetch('/api/admin/messages', { headers: getAuthHeaders() })
       .then((res) => (res.ok ? res.json() : []))
       .then((rows: ContactMessage[]) => setMessages(rows))
       .catch(() => setMessages([]))
@@ -109,10 +117,21 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: passwordInput }),
       });
-      const data = (await res.json()) as { authenticated?: boolean; error?: string };
+      const data = (await res.json()) as {
+        authenticated?: boolean;
+        token?: string;
+        error?: string;
+      };
       if (!res.ok || !data.authenticated) {
         setAuthError(data.error || 'Incorrect password.');
       } else {
+        if (data.token) {
+          try {
+            sessionStorage.setItem('am_admin_token', data.token);
+          } catch {
+            // Ignore storage failures
+          }
+        }
         setAuthenticated(true);
         setPasswordInput('');
       }
@@ -124,6 +143,11 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
   };
 
   const handleLogout = async () => {
+    try {
+      sessionStorage.removeItem('am_admin_token');
+    } catch {
+      // Ignore storage failures
+    }
     await fetch('/api/admin/logout', { method: 'POST' });
     setAuthenticated(false);
     setNotice(null);
@@ -135,7 +159,7 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
     try {
       const res = await fetch('/api/admin/portfolio', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(draft),
       });
       const payload = (await res.json()) as {
@@ -168,7 +192,7 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
       const dataBase64 = await readFileAsDataUrl(file);
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           filename: file.name,
           mimeType: file.type,
@@ -268,7 +292,10 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
   };
 
   const handleDeleteMessage = async (id: string) => {
-    const res = await fetch(`/api/admin/messages/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/admin/messages/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
     if (res.ok) {
       setMessages((prev) => prev.filter((m) => m.id !== id));
     }
@@ -283,7 +310,7 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
     }
     const res = await fetch('/api/admin/change-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
     });
     const data = (await res.json()) as { ok?: boolean; error?: string; message?: string };
@@ -337,25 +364,16 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
               <label htmlFor="admin-password" className={labelClass}>
                 Admin Passcode
               </label>
-              <div className="relative">
-                <input
-                  id="admin-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="Enter admin passcode"
-                  className={`${inputClass} pr-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              <input
+                id="admin-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Enter admin passcode"
+                className={inputClass}
+              />
             </div>
 
             {authError && (
@@ -372,10 +390,6 @@ export function AdminDashboard({ portfolio, onPublished, onClose }: AdminDashboa
               {authBusy ? 'Signing In...' : 'Sign In to Dashboard'}
             </button>
           </form>
-
-          <p className="mt-5 pt-4 border-t border-slate-100 dark:border-[#181D27] text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Default initial passcode: <code className="font-mono-tabular text-slate-700 dark:text-slate-300">IIMU2026@Ankur</code> (you can change it anytime in the Security tab).
-          </p>
         </div>
       </div>
     );
