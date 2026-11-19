@@ -1,0 +1,222 @@
+{
+  "profile": {
+    "fullName": "Ankur Mishra",
+    "headline": "BBA (Entrepreneurship) Student",
+    "institution": "IIM Udaipur",
+    "tagline": "Exploring Business, Strategy & Entrepreneurship.",
+    "introduction": "I am a BBA student at IIM Udaipur with a strong interest in business strategy, finance and entrepreneurship. I enjoy exploring business challenges, participating in case competitions and developing practical skills in research, analytical thinking, communication and problem-solving.",
+    "photoUrl": "",
+    "photoCaption": "",
+    "showGreetingClock": true
+  },
+  "about": {
+    "heading": "Building analytical rigor through strategy, finance, and real-world case challenges.",
+    "leadQuote": "Committed to disciplined business thinking, clear communication, and continuous growth.",
+    "paragraphs": [
+      "As an undergraduate student pursuing the Bachelor of Business Administration (Entrepreneurship) at the Indian Institute of Management Udaipur, my academic journey is anchored in understanding how enduring businesses are designed, financed, and scaled.",
+      "My primary interests span business strategy, corporate and market finance, and entrepreneurship. Rather than approaching business concepts solely in theory, I actively test and sharpen my reasoning by participating in national-level case competitions and business quizzes hosted across premier management and technical institutes.",
+      "Alongside my academic coursework, I am deeply curious about early-stage startups, structured business research, and operational execution. I believe that strong problem-solving stems from asking sharper questions, working collaboratively within diverse teams, and staying committed to continuous learning and professional development."
+    ],
+    "pillars": [
+      {
+        "id": "pillar-strategy",
+        "title": "Business Strategy & Finance",
+        "description": "Developing structured frameworks for market sizing, financial risk evaluation, and sustainable competitive positioning."
+      },
+      {
+        "id": "pillar-cases",
+        "title": "National Case Competitions",
+        "description": "Translating ambiguous business prompts into crisp, evidence-backed strategic recommendations under tight deadlines."
+      },
+      {
+        "id": "pillar-operations",
+        "title": "Startups, Research & Execution",
+        "description": "Exploring venture building, operational workflows, and disciplined research to understand how organizations scale."
+      }
+    ]
+  },
+  "education": [
+    {
+      "id": "edu-iimu",
+      "institution": "Indian Institute of Management Udaipur",
+      "degree": "Bachelor of Business Administration (BBA – Entrepreneurship)",
+      "period": "2026 – Present",
+      "location": "Udaipur, Rajasthan",
+      "details": "Undergraduate program focused on entrepreneurial thinking, business fundamentals, strategy, finance, and analytical problem-solving."
+    },
+    {
+      "id": "edu-kv",
+      "institution": "PM SHRI Kendriya Vidyalaya, IIM Lucknow",
+      "degree": "Class XII – Commerce Stream",
+      "period": "2024 – 2026",
+      "location": "Lucknow, Uttar Pradesh",
+      "details": "Completed senior secondary education in the Commerce stream, building foundational fluency in accounting, economics, and business studies alongside school leadership."
+    }
+  ],
+  "competitions": [
+    {
+      "id": "comp-haritvitt",
+      "title": "HaritVitt 2026 – Green Finance Case Challenge",
+      "organizer": "IIM Lucknow",
+      "date": "October 2026",
+      "category": "Green Finance Case Study",
+      "participationNote": "Competition Participation"
+    },
+    {
+      "id": "comp-technocruise",
+      "title": "TECHNOCRUISE – National Business Case Challenge",
+      "organizer": "IIT Kanpur",
+      "date": "October 2026",
+      "category": "National Business Case",
+      "participationNote": "Competition Participation"
+    },
+    {
+      "id": "comp-mavehrick",
+      "title": "Mavehrick 4.0 – Business Cluster",
+      "organizer": "IIM Visakhapatnam",
+      "date": "October 2026",
+      "category": "Business Strategy Cluster",
+      "participationNote": "Competition Participation"
+    },
+    {
+      "id": "comp-agrovon",
+      "title": "Marketing Quencher's Quiz, Agrovon 2k26",
+      "organizer": "C.C.S. NIAM Jaipur",
+      "date": "October 2026",
+      "category": "Marketing & Business Quiz",
+      "participationNote": "Competition Participation"
+    },
+    {
+      "id": "comp-naventra",
+      "title": "Naventra Finance Frenzy '26",
+      "organizer": "Naventra",
+      "date": "September 2026",
+      "category": "Finance Challenge",
+      "participationNote": "Competition Participation"
+    },
+    {
+      "id": "comp-indiastox",
+      "title": "IndiaStox Nifty50 Predictions Challenge",
+      "organizer": "Unstop",
+      "date": "2026",
+      "category": "Equity Market Forecasting",
+      "participationNote": "Competition Participation"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-hbi",
+      "title": "Writing Skills",
+      "issuer": "Harvard Business Impact",
+      "date": "November 2026",
+      "credentialType": "Business Communication",
+      "fileUrl": "",
+      "fileName": "",
+      "fileMimeType": ""
+    },
+    {
+      "id": "cert-iimr",
+      "title": "Communication & Interpersonal Behaviour",
+      "issuer": "IIM Rohtak",
+      "date": "September 2026",
+      "credentialType": "Executive Communication",
+      "fileUrl": "",
+      "fileName": "",
+      "fileMimeType": ""
+    },
+    {
+      "id": "cert-gs",
+      "title": "Risk Job Simulation",
+      "issuer": "Goldman Sachs · Forage",
+      "date": "August 2026",
+      "credentialType": "Financial Risk Analysis",
+      "fileUrl": "",
+      "fileName": "",
+      "fileMimeType": ""
+    },
+    {
+      "id": "cert-tcs",
+      "title": "Communication Skills",
+      "issuer": "TCS iON",
+      "date": "July 2026",
+      "credentialType": "Professional Readiness",
+      "fileUrl": "",
+      "fileName": "",
+      "fileMimeType": ""
+    },
+    {
+      "id": "cert-hp",
+      "title": "AI for Business Professionals",
+      "issuer": "HP LIFE",
+      "date": "June 2026",
+      "credentialType": "Business Technology",
+      "fileUrl": "",
+      "fileName": "",
+      "fileMimeType": ""
+    }
+  ],
+  "skills": [
+    {
+      "id": "skill-pm",
+      "name": "Project Management",
+      "focus": "Coordinating deliverables, timelines, and multi-stage case milestones."
+    },
+    {
+      "id": "skill-ppt",
+      "name": "PPT Presentation Skills",
+      "focus": "Structuring executive-ready slide narratives and visual synthesis."
+    },
+    {
+      "id": "skill-excel",
+      "name": "Microsoft Excel (Working Knowledge)",
+      "focus": "Organizing structured tables, calculations, and financial summaries."
+    },
+    {
+      "id": "skill-teamwork",
+      "name": "Teamwork",
+      "focus": "Collaborating effectively across peer teams in national case competitions."
+    },
+    {
+      "id": "skill-time",
+      "name": "Time Management",
+      "focus": "Balancing academic rigor, competitive sprints, and co-curricular commitments."
+    },
+    {
+      "id": "skill-comm",
+      "name": "Effective Communication",
+      "focus": "Articulating clear arguments in written briefs, decks, and structured debates."
+    },
+    {
+      "id": "skill-critical",
+      "name": "Critical Thinking",
+      "focus": "Deconstructing complex business problems into actionable, testable assumptions."
+    }
+  ],
+  "leadership": [
+    {
+      "id": "lead-captain",
+      "title": "Discipline Vice House Captain",
+      "context": "School Leadership",
+      "description": "Entrusted with maintaining student conduct, coordinating house-level discipline initiatives, and supporting faculty and peers in daily campus operations."
+    },
+    {
+      "id": "lead-debate",
+      "title": "Debate Competition – Second Position (Opposition Side)",
+      "context": "Public Speaking & Argumentation",
+      "description": "Secured Second Position representing the Opposition Side, demonstrating structured rebuttal, composure under pressure, and persuasive articulation."
+    }
+  ],
+  "contact": {
+    "name": "Ankur Mishra",
+    "phone": "+91 9651863811",
+    "email": "ankurmishrastudent@gmail.com",
+    "linkedinUrl": "https://linkedin.com/in/ankur-mishra-359ab1416",
+    "linkedinHandle": "linkedin.com/in/ankur-mishra-359ab1416",
+    "location": "Lucknow, Uttar Pradesh, India",
+    "resumeFileUrl": "/api/resume/download",
+    "resumeDownloadName": "Ankur_Mishra_Resume.pdf",
+    "resumeOriginalName": "Ankur_Mishra_Professional_Resume.pdf",
+    "resumeUpdatedAt": "2026-11-19"
+  },
+  "updatedAt": "2026-11-19T00:00:00.000Z"
+}
